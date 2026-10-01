@@ -1,0 +1,2267 @@
+<!DOCTYPE html>make 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcendia - Delivery Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;        /* Deep slate background */
+            --card-bg: #1e293b;         /* Lighter slate for columns & header card */
+            --item-bg: #0f172a;         /* Darker background for individual cards */
+            --text-main: #f8fafc;       /* Near white for main text */
+            --text-muted: #94a3b8;      /* Muted gray for secondary text */
+            --border-color: #334155;    /* Subtle border contrast */
+            --primary: #3b82f6;         /* Accent blue */
+            --success: #16a34a;         /* Green */
+            --caution: #dc2626;         /* Red/Caution */
+            --pickup-accent: #eab308;   /* Yellow for pickups */
+            --archivnow t e-accent: #64748b;  /* Slate gray for archive */
+            
+            /* Fluid Spacing & Sizing Variables */
+            --spacing-unit: clamp(0.5rem, 1vw + 0.25rem, 1.25rem);
+            --border-radius-card: clamp(6px, 1vw + 2px, 12px);
+            --font-size-base: clamp(0.8rem, 0.4vw + 0.7rem, 0.95rem);
+            --font-size-heading: clamp(1rem, 1vw + 0.5rem, 1.25rem);
+        }
+
+        /* Reusable Gradient Title Style (Fades from Blue to White) */
+        .gradient-title {
+            background: linear-gradient(90deg, #3b82f6 0%, #93c5fd 60%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        /* Larger Solid White Vector 4-Point Star Logo Style */
+        .brand-logo {
+            width: clamp(1.8rem, 3vw, 2.4rem);
+            height: clamp(1.8rem, 3vw, 2.4rem);
+            fill: #ffffff;
+            flex-shrink: 0;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: var(--spacing-unit);
+            box-sizing: border-box;
+        }
+
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        .page-wrapper {
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-unit);
+        }
+
+        /* Initial Gate Screen When Not Logged In */
+        #auth-gate-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+            gap: var(--spacing-unit);
+        }
+
+        .gate-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-card);
+            padding: calc(var(--spacing-unit) * 2);
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-unit);
+        }
+
+        .gate-card .gate-title-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .gate-card h1 {
+            margin: 0;
+            font-size: clamp(1.5rem, 2.5vw + 0.5rem, 2rem);
+        }
+
+        .gate-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .gate-buttons button {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .app-locked {
+            display: none !important;
+        }
+
+        /* Portal Header Card */
+        .portal-header-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-card);
+            padding: calc(var(--spacing-unit) * 0.75) var(--spacing-unit);
+            box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-unit);
+        }
+
+        .portal-title-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .portal-title-area h1 {
+            margin: 0;
+            font-size: clamp(0.9rem, 1.8vw + 0.4rem, 1.35rem);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: calc(var(--spacing-unit) * 0.5);
+            align-items: center;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        /* Dealer Scope Toggle Bar (Store vs Global) */
+        .dealer-scope-bar {
+            display: none;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-card);
+            padding: 0.5rem var(--spacing-unit);
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.2);
+        }
+
+        body.dealer-logged-in .dealer-scope-bar {
+            display: flex;
+        }
+
+        .dealer-store-badge {
+            background-color: #1e3a8a;
+            border: 1px solid #3b82f6;
+            color: var(--text-main);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: var(--font-size-base);
+            font-weight: 700;
+            letter-spacing: 0.025em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dealer-store-badge .zone-pill {
+            background-color: #1d4ed8;
+            color: #ffffff;
+            font-size: 0.85em;
+            font-weight: 800;
+            padding: 0.1rem 0.45rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .scope-toggle-group {
+            display: flex;
+            background-color: var(--item-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 3px;
+            gap: 3px;
+        }
+
+        .scope-toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            font-size: calc(var(--font-size-base) * 0.9);
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scope-toggle-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Generic Card Styling for Forms */
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-card);
+            padding: var(--spacing-unit);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .dashboard-card.hidden {
+            display: none;
+        }
+
+        .dashboard-card h2 {
+            margin: 0 0 var(--spacing-unit) 0;
+            font-size: var(--font-size-heading);
+            color: var(--text-main);
+        }
+
+        /* Type Selector Toggle (Delivery vs Pickup) */
+        .type-selector-group {
+            display: flex;
+            background-color: var(--item-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 3px;
+            gap: 3px;
+        }
+
+        .type-toggle-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem;
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .type-toggle-btn.active-delivery {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .type-toggle-btn.active-pickup {
+            background-color: var(--pickup-accent);
+            color: #0f172a;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) auto;
+            gap: var(--spacing-unit);
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            min-width: 0;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group.hidden {
+            display: none !important;
+        }
+
+        .form-group label {
+            font-size: calc(var(--font-size-base) * 0.9);
+            color: var(--text-muted);
+        }
+
+        .form-group input, 
+        .form-group select {
+            background-color: var(--item-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: clamp(0.5rem, 0.8vh, 0.75rem) clamp(0.6rem, 1vw, 0.9rem);
+            color: var(--text-main);
+            font-size: var(--font-size-base);
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input[type="file"] {
+            padding: clamp(0.35rem, 0.6vh, 0.5rem) clamp(0.6rem, 1vw, 0.9rem);
+            cursor: pointer;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            border-color: var(--primary);
+        }
+
+        .file-upload-preview {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.25rem;
+            flex-wrap: wrap;
+        }
+
+        .preview-thumbnail {
+            width: clamp(36px, 5vw, 48px);
+            height: clamp(36px, 5vw, 48px);
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .preview-thumbnail.show {
+            display: block;
+        }
+
+        .btn-remove-file {
+            background-color: transparent;
+            color: var(--caution);
+            border: 1px solid var(--caution);
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            font-size: calc(var(--font-size-base) * 0.85);
+            font-weight: 500;
+            cursor: pointer;
+            display: none;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .btn-remove-file.show {
+            display: inline-block;
+        }
+
+        .btn-remove-file:hover {
+            background-color: var(--caution);
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: clamp(0.5rem, 0.8vh, 0.75rem) clamp(1rem, 2vw, 1.5rem);
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: fit-content;
+            width: fit-content;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .btn-primary {
+                width: 100%;
+            }
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .user-status-badge {
+            background-color: var(--success);
+            color: white;
+            border-radius: 5px;
+            padding: clamp(0.25rem, 0.5vw, 0.4rem) clamp(0.4rem, 0.8vw, 0.75rem);
+            font-size: calc(var(--font-size-base) * 0.9);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: clamp(0.25rem, 0.5vw, 0.4rem);
+            white-space: nowrap;
+            flex-wrap: wrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-status-badge svg {
+            width: clamp(10px, 1.2vw, 14px);
+            height: clamp(10px, 1.2vw, 14px);
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .btn-logout {
+            background-color: rgba(0, 0, 0, 0.25);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: clamp(0.25rem, 0.5vh, 0.35rem) clamp(0.5rem, 0.8vw, 0.75rem);
+            font-size: calc(var(--font-size-base) * 0.9);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-logout:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-warning {
+            background-color: var(--caution);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            font-size: calc(var(--font-size-base) * 0.9);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-warning:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-archive-action {
+            background-color: var(--archive-accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            font-size: calc(var(--font-size-base) * 0.9);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-archive-action:hover {
+            background-color: #475569;
+        }
+
+        .btn-danger-action {
+            background-color: var(--caution);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            font-size: calc(var(--font-size-base) * 0.9);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-danger-action:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-success-action {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.35rem 0.6rem;
+            font-size: calc(var(--font-size-base) * 0.9);
+            font-weight: 600;
+            cursor: pointer;
+            display: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-success-action:hover {
+            background-color: #15803d;
+        }
+
+        body.driver-logged-in .btn-success-action {
+            display: inline-block;
+        }
+
+        .btn-driver-login, .btn-dealer-login {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: clamp(0.25rem, 0.5vw, 0.4rem) clamp(0.4rem, 0.8vw, 0.75rem);
+            font-size: calc(var(--font-size-base) * 0.95);
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+            transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .btn-driver-login:hover, .btn-dealer-login:hover {
+            background-color: var(--item-bg);
+            border-color: var(--text-muted);
+        }
+
+        .btn-dealer-login {
+            background-color: var(--primary);
+            border: none;
+            color: white;
+        }
+
+        .btn-dealer-login:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-driver-login svg,
+        .btn-dealer-login svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-card);
+            padding: var(--spacing-unit);
+            width: 100%;
+            max-width: min(420px, 95vw);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-unit);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: var(--font-size-heading);
+            color: var(--text-main);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0.2rem;
+        }
+
+        .close-modal:hover {
+            color: var(--text-main);
+        }
+
+        .login-stack {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-unit);
+        }
+
+        .dialog-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .dialog-buttons button {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.6rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: var(--font-size-base);
+        }
+
+        .btn-secondary-action {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+
+        .btn-secondary-action:hover {
+            background-color: var(--item-bg);
+        }
+
+        /* Signature Modal Specifics */
+        .signature-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .signature-pad-wrapper {
+            background-color: var(--item-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            position: relative;
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        canvas#signature-canvas {
+            display: block;
+            width: 100%;
+            height: 160px;
+            cursor: crosshair;
+        }
+
+        .signature-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-clear-sig {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: calc(var(--font-size-base) * 0.85);
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .btn-clear-sig:hover {
+            color: var(--text-main);
+        }
+
+        .success-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .success-popup-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .success-popup-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-card);
+            padding: calc(var(--spacing-unit) * 1.5);
+            width: 100%;
+            max-width: min(340px, 90vw);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            transform: scale(0.95);
+            transition: transform 0.25s ease;
+            text-align: center;
+        }
+
+        .success-popup-overlay.active .success-popup-card {
+            transform: scale(1);
+        }
+
+        .success-icon-large {
+            background-color: rgba(22, 163, 74, 0.15);
+            color: var(--success);
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .success-icon-large svg {
+            width: 28px;
+            height: 28px;
+            fill: currentColor;
+        }
+
+        .success-popup-title {
+            margin: 0;
+            font-size: var(--font-size-heading);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .success-popup-message {
+            margin: 0;
+            font-size: var(--font-size-base);
+            color: var(--text-muted);
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+            gap: var(--spacing-unit);
+            width: 100%;
+        }
+
+        .delivery-column {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-card);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .delivery-column.hidden {
+            display: none !important;
+        }
+
+        .column-header {
+            padding: calc(var(--spacing-unit) * 0.75) var(--spacing-unit);
+            font-size: var(--font-size-base);
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .header-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .am-header { background-color: #d97706; }
+        .pm-header { background-color: #0284c7; }
+        .completed-header { background-color: #16a34a; }
+        .archive-header { background-color: #64748b; }
+        
+        .caution-header {
+            background-color: #dc2626;
+            color: #ffffff;
+            animation: pulse-caution 1.8s infinite ease-in-out;
+        }
+
+        .canceled-header {
+            background-color: #eab308;
+            color: #0f172a;
+        }
+
+        @keyframes pulse-caution {
+            0% { background-color: #dc2626; box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0.4); }
+            50% { background-color: #b91c1c; box-shadow: inset 0 0 12px 2px rgba(220, 38, 38, 0.6); }
+            100% { background-color: #dc2626; box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0.4); }
+        }
+
+        .badge {
+            background-color: rgba(0, 0, 0, 0.25);
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: calc(var(--font-size-base) * 0.85);
+            flex-shrink: 0;
+        }
+
+        .caution-header .badge {
+            background-color: rgba(0, 0, 0, 0.25);
+            color: #ffffff;
+        }
+
+        .canceled-header .badge {
+            background-color: rgba(15, 23, 42, 0.15);
+            color: #0f172a;
+        }
+
+        .archive-search-box {
+            padding: calc(var(--spacing-unit) * 0.5) var(--spacing-unit);
+            background-color: rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .archive-search-input {
+            width: 100%;
+            background-color: var(--item-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.35rem 0.6rem;
+            color: var(--text-main);
+            font-size: calc(var(--font-size-base) * 0.9);
+            outline: none;
+        }
+
+        .archive-search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .card-list {
+            padding: var(--spacing-unit);
+            display: flex;
+            flex-direction: column;
+            gap: calc(var(--spacing-unit) * 0.75);
+            flex-grow: 1;
+            min-height: 200px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .delivery-card {
+            background-color: var(--item-bg);
+            border-radius: 6px;
+            overflow: hidden;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+        }
+
+        /* Card Outlines for Deliveries vs Pickups */
+        .delivery-card.is-delivery {
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.25);
+        }
+
+        .delivery-card.is-pickup {
+            border: 2px solid #eab308;
+            box-shadow: 0 0 6px rgba(234, 179, 8, 0.25);
+        }
+
+        .delivery-card.is-archived {
+            border: 2px solid #64748b;
+            box-shadow: 0 0 6px rgba(100, 116, 139, 0.25);
+        }
+
+        .delivery-card.is-running-late {
+            border: 2px solid #dc2626 !important;
+            animation: pulse-card-caution 1.8s infinite ease-in-out;
+        }
+
+        .delivery-card.is-canceled {
+            border: 2px solid #eab308 !important;
+            box-shadow: 0 0 6px rgba(234, 179, 8, 0.3);
+        }
+
+        @keyframes pulse-card-caution {
+            0% { box-shadow: 0 0 4px rgba(220, 38, 38, 0.3); }
+            50% { box-shadow: 0 0 14px rgba(220, 38, 38, 0.7); }
+            100% { box-shadow: 0 0 4px rgba(220, 38, 38, 0.3); }
+        }
+
+        .delivery-card:hover {
+            filter: brightness(1.05);
+        }
+
+        .delivery-summary-row {
+            padding: calc(var(--spacing-unit) * 0.75);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            gap: 0.5rem;
+        }
+
+        .delivery-summary-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .delivery-summary-info h3 {
+            margin: 0;
+            font-size: var(--font-size-base);
+            color: var(--text-main);
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .invoice-tag {
+            font-size: calc(var(--font-size-base) * 0.85);
+            color: var(--text-muted);
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .type-badge-pill {
+            font-size: calc(var(--font-size-base) * 0.75);
+            padding: 0.1rem 0.45rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .type-badge-pill.delivery {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+        .type-badge-pill.pickup {
+            background-color: rgba(234, 179, 8, 0.2);
+            color: #fde047;
+            border: 1px solid rgba(234, 179, 8, 0.4);
+        }
+        .type-badge-pill.archive {
+            background-color: rgba(100, 116, 139, 0.2);
+            color: #cbd5e1;
+            border: 1px solid rgba(100, 116, 139, 0.4);
+        }
+
+        .running-late-badge-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background-color: rgba(220, 38, 38, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(220, 38, 38, 0.5);
+            padding: 0.1rem 0.45rem;
+            border-radius: 4px;
+            font-size: calc(var(--font-size-base) * 0.75);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .running-late-badge-inline svg {
+            width: 10px;
+            height: 10px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .canceled-badge-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background-color: rgba(234, 179, 8, 0.2);
+            color: #fde047;
+            border: 1px solid rgba(234, 179, 8, 0.5);
+            padding: 0.1rem 0.45rem;
+            border-radius: 4px;
+            font-size: calc(var(--font-size-base) * 0.75);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .canceled-badge-inline svg {
+            width: 10px;
+            height: 10px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .delivery-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease-out, padding 0.25s ease-out;
+            padding: 0 calc(var(--spacing-unit) * 0.75);
+            border-top: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .delivery-card.expanded .delivery-details {
+            max-height: 650px;
+            padding: calc(var(--spacing-unit) * 0.75);
+            border-top-color: var(--border-color);
+        }
+
+        .delivery-details p {
+            margin: 0;
+            font-size: calc(var(--font-size-base) * 0.95);
+            color: var(--text-muted);
+            word-break: break-word;
+        }
+
+        .card-actions-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.35rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .card-invoice-thumb, .card-signature-thumb {
+            width: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            margin-top: 0.25rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .timestamp-badge {
+            font-size: calc(var(--font-size-base) * 0.85);
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .archive-timestamp-badge {
+            font-size: calc(var(--font-size-base) * 0.85);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-gate-screen">
+        <div class="gate-card">
+            <div class="gate-title-wrapper">
+                <svg class="brand-logo" viewBox="0 0 24 24">
+                    <path d="M12 2C12 7.5 16.5 12 22 12C16.5 12 12 16.5 12 22C12 16.5 7.5 12 2 12C7.5 12 12 7.5 12 2Z"/>
+                </svg>
+                <h1 class="gradient-title">Transcendia</h1>
+            </div>
+            <p style="margin: 0; font-size: var(--font-size-base); color: var(--text-muted);">Please log in to access the delivery tracking system.</p>
+            <div class="gate-buttons">
+                <button id="gate-driver-login-btn" class="btn-driver-login" style="justify-content: center; padding: 0.75rem;">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Driver Login
+                </button>
+                <button id="gate-dealer-login-btn" class="btn-dealer-login" style="justify-content: center; padding: 0.75rem;">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0-2-.9-2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                    </svg>
+                    Dealer Login
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-dashboard-app" class="page-wrapper app-locked">
+        
+        <header class="portal-header-card">
+            <div class="portal-title-area">
+                <svg class="brand-logo" viewBox="0 0 24 24">
+                    <path d="M12 2C12 7.5 16.5 12 22 12C16.5 12 12 16.5 12 22C12 16.5 7.5 12 2 12C7.5 12 12 7.5 12 2Z"/>
+                </svg>
+                <h1 class="gradient-title">Transcendia</h1>
+            </div>
+            <div class="header-actions">
+                <div id="header-auth-action-area" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button id="open-driver-login-btn" class="btn-driver-login">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                        Driver Login
+                    </button>
+                    <button id="open-dealer-login-btn" class="btn-dealer-login">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0-2-.9-2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                        </svg>
+                        Dealer Login
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dealer Store vs Global Toggle Bar -->
+        <div id="dealer-scope-bar" class="dealer-scope-bar">
+            <div id="dealer-store-badge" class="dealer-store-badge">Chrysler <span class="zone-pill">1</span></div>
+            <div class="scope-toggle-group">
+                <button type="button" id="scope-btn-store" class="scope-toggle-btn active">Dealer Mode</button>
+                <button type="button" id="scope-btn-global" class="scope-toggle-btn">Global Mode</button>
+            </div>
+        </div>
+
+        <section id="add-delivery-section" class="dashboard-card hidden">
+            <h2 id="form-heading-title">Add New Item</h2>
+            <form id="delivery-form" class="form-grid">
+                <div class="form-group full-width">
+                    <label>Entry Type</label>
+                    <div class="type-selector-group">
+                        <button type="button" id="type-btn-delivery" class="type-toggle-btn active-delivery">Delivery</button>
+                        <button type="button" id="type-btn-pickup" class="type-toggle-btn">Pickup</button>
+                    </div>
+                </div>
+                <div class="form-group" id="invoice-group">
+                    <label for="invoice-num">Invoice / Reference #</label>
+                    <input type="text" id="invoice-num" placeholder="..." required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-name">Shop / Customer Name</label>
+                    <input type="text" id="customer-name" placeholder="..." required>
+                </div>
+                <div class="form-group">
+                    <label for="delivery-zone-select">Delivery Zone (1–10)</label>
+                    <select id="delivery-zone-select" required>
+                        <option value="1">Zone 1 (Chrys)</option>
+                        <option value="2">Zone 2 (Toyota)</option>
+                        <option value="3">Zone 3 (Hyundai)</option>
+                        <option value="4">Zone 4 (Honda)</option>
+                        <option value="5">Zone 5 (Mazda)</option>
+                        <option value="6">Zone 6 (Acura/Subaru)</option>
+                        <option value="7">Zone 7 (Chevy)</option>
+                        <option value="8">Zone 8 (Westside VW)</option>
+                        <option value="9">Zone 9 (Land Rover/Genesis)</option>
+                        <option value="10">Zone 10 (Infiniti)</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label for="invoice-photo">Invoice Photo / Document</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <input type="file" id="invoice-photo" accept="image/*" capture="environment">
+                    </div>
+                    <div class="file-upload-preview">
+                        <img id="preview-thumb" class="preview-thumbnail" src="" alt="Invoice Preview">
+                        <button type="button" id="remove-file-btn" class="btn-remove-file">Remove Photo</button>
+                    </div>
+                </div>
+                <button type="submit" id="submit-form-btn" class="btn-primary">Add Item</button>
+            </form>
+        </section>
+
+        <!-- 4-Column Permanent Dashboard Grid (AM/PM, Completed, Archive) -->
+        <div class="dashboard-container" id="standard-dashboard-grid">
+            
+            <div class="delivery-column" id="column-am">
+                <div class="column-header am-header">
+                    <span>To Do</span>
+                    <span class="badge" id="badge-am">0</span>
+                </div>
+                <div class="card-list" id="list-am"></div>
+            </div>
+
+            <div class="delivery-column" id="column-pm">
+                <div class="column-header pm-header">
+                    <span>To Do</span>
+                    <span class="badge" id="badge-pm">0</span>
+                </div>
+                <div class="card-list" id="list-pm"></div>
+            </div>
+
+            <div class="delivery-column" id="column-completed">
+                <div class="column-header completed-header">
+                    <span>Completed Items</span>
+                    <span class="badge" id="badge-completed">0</span>
+                </div>
+                <div class="card-list" id="list-completed"></div>
+            </div>
+
+            <div class="delivery-column" id="column-archive">
+                <div class="column-header archive-header">
+                    <div class="header-title-group">
+                        <svg class="header-icon" viewBox="0 0 24 24">
+                            <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.15.55L3.46 5.23C3.17 5.57 3 6.01 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.49-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-3h4v3h3.5L12 17.5zM5.12 5l.81-1h12l.81 1H5.12z"/>
+                        </svg>
+                        <span>Archive Grid</span>
+                    </div>
+                    <span class="badge" id="badge-archive">0</span>
+                </div>
+                <div class="archive-search-box">
+                    <input type="text" id="archive-search-input" class="archive-search-input" placeholder="Search invoice # or date...">
+                </div>
+                <div class="card-list" id="list-archive"></div>
+            </div>
+
+        </div>
+
+        <!-- Separate Late and Canceled Grid Containers -->
+        <div class="dashboard-container" style="margin-top: 0.5rem;">
+            <div class="delivery-column hidden" id="late-deliveries-container">
+                <div class="column-header caution-header">
+                    <div class="header-title-group">
+                        <svg class="header-icon" viewBox="0 0 24 24">
+                            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                        </svg>
+                        <span>Late Deliveries</span>
+                    </div>
+                    <span class="badge" id="badge-late">0</span>
+                </div>
+                <div class="card-list" id="list-late"></div>
+            </div>
+
+            <div class="delivery-column hidden" id="canceled-deliveries-container">
+                <div class="column-header canceled-header">
+                    <div class="header-title-group">
+                        <svg class="header-icon" viewBox="0 0 24 24">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                        <span>Canceled Deliveries</span>
+                    </div>
+                    <span class="badge" id="badge-canceled">0</span>
+                </div>
+                <div class="card-list" id="list-canceled"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="driver-login-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Driver Portal Login</h2>
+                <button id="close-driver-login-btn" class="close-modal">&times;</button>
+            </div>
+            <form id="driver-login-form" class="login-stack">
+                <div class="form-group">
+                    <label for="driver-user">Driver ID / Username</label>
+                    <input type="text" id="driver-user" placeholder="..." required>
+                </div>
+                <div class="form-group">
+                    <label for="driver-pass">Password</label>
+                    <input type="password" id="driver-pass" placeholder="..." required>
+                </div>
+                <div class="form-group">
+                    <label for="driver-assigned-zone">Assigned Delivery Zone (1–10)</label>
+                    <input type="number" id="driver-assigned-zone" min="1" max="10" placeholder="..." required>
+                </div>
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dealer-login-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Dealer Access Login</h2>
+                <button id="close-dealer-login-btn" class="close-modal">&times;</button>
+            </div>
+            <form id="dealer-login-form" class="login-stack">
+                <div class="form-group">
+                    <label for="dealer-select">Select Dealership Store</label>
+                    <select id="dealer-select" required>
+                        <option value="" disabled selected>-- Choose Store --</option>
+                        <option value="Chrysler">Chrysler (Zone 1)</option>
+                        <option value="Toyota">Toyota (Zone 2)</option>
+                        <option value="Hyundai">Hyundai (Zone 3)</option>
+                        <option value="Honda">Honda (Zone 4)</option>
+                        <option value="Mazda">Mazda (Zone 5)</option>
+                        <option value="Acura/Subaru">Acura/Subaru (Zone 6)</option>
+                        <option value="Chevy">Chevy (Zone 7)</option>
+                        <option value="Westside Volkswagen">Westside Volkswagen (Zone 8)</option>
+                        <option value="Land Rover/Genesis">Land Rover/Genesis (Zone 9)</option>
+                        <option value="Infiniti">Infiniti (Zone 10)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dealer-pass">Password</label>
+                    <input type="password" id="dealer-pass" placeholder="..." required>
+                </div>
+                <button type="submit" class="btn-primary">Access Portal</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="delete-pin-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Delete Confirmation</h2>
+                <button id="close-delete-pin-btn" class="close-modal">&times;</button>
+            </div>
+            <form id="delete-pin-form" class="login-stack">
+                <div class="form-group">
+                    <label for="delete-pin-input">Enter PIN to Delete</label>
+                    <input type="password" id="delete-pin-input" placeholder="..." required>
+                </div>
+                <div class="dialog-buttons">
+                    <button type="button" id="cancel-delete-pin-btn" class="btn-secondary-action">Cancel</button>
+                    <button type="submit" class="btn-danger-action">Delete File</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cancel Confirmation Modal -->
+    <div id="cancel-confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Cancellation</h2>
+            </div>
+            <p style="margin: 0; font-size: var(--font-size-base); color: var(--text-muted);">Are you sure you want to cancel this delivery?</p>
+            <div class="dialog-buttons">
+                <button id="cancel-modal-no" class="btn-secondary-action">No</button>
+                <button id="cancel-modal-yes" class="btn-warning">Yes, Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archive Confirmation Modal -->
+    <div id="archive-confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Archiving</h2>
+            </div>
+            <p style="margin: 0; font-size: var(--font-size-base); color: var(--text-muted);">Are you sure you want to archive this canceled item immediately?</p>
+            <div class="dialog-buttons">
+                <button id="archive-modal-no" class="btn-secondary-action">No</button>
+                <button id="archive-modal-yes" class="btn-archive-action">Yes, Archive</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="photo-prompt-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Completion Confirmation</h2>
+            </div>
+            <p style="margin: 0; font-size: var(--font-size-base); color: var(--text-muted);">Would you like to add a confirmation photo?</p>
+            <div class="dialog-buttons">
+                <button id="photo-prompt-no" class="btn-secondary-action">No</button>
+                <button id="photo-prompt-yes" class="btn-primary">Yes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="signature-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Customer / Receiver Signature</h2>
+                <button id="close-signature-btn" class="close-modal">&times;</button>
+            </div>
+            <div class="signature-container">
+                <label style="font-size: calc(var(--font-size-base) * 0.9); color: var(--text-muted);">Please sign below to confirm receipt:</label>
+                <div class="signature-pad-wrapper">
+                    <canvas id="signature-canvas"></canvas>
+                </div>
+                <div class="signature-actions">
+                    <button type="button" id="clear-signature-btn" class="btn-clear-sig">Clear Signature</button>
+                </div>
+            </div>
+            <div class="dialog-buttons" style="margin-top: 0.5rem;">
+                <button id="cancel-signature-btn" class="btn-secondary-action">Cancel</button>
+                <button id="save-signature-btn" class="btn-primary">Confirm & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="completion-photo-input" accept="image/*" capture="environment" style="display: none;">
+
+    <div id="success-popup" class="success-popup-overlay">
+        <div class="success-popup-card">
+            <div class="success-icon-large">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+            </div>
+            <h3 class="success-popup-title">Success</h3>
+            <p id="success-popup-text" class="success-popup-message">Action processed successfully.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // TODO: Replace with your actual Firebase project credentials
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgmw1bi4pRTJa59JLDoGY1Mb8CGuUpQ_Q",
+            authDomain: "transcendia-4f714.firebaseapp.com",
+            projectId: "transcendia-4f714",
+            storageBucket: "transcendia-4f714.firebasestorage.app",
+            messagingSenderId: "1005918946235",
+            appId: "1:1005918946235:web:d02fc7910b37e5e531ba9e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Dealership-to-Zone Mapping Dictionary
+        const dealerZoneMapping = {
+            "Chrysler": "1",
+            "Toyota": "2",
+            "Hyundai": "3",
+            "Honda": "4",
+            "Mazda": "5",
+            "Acura/Subaru": "6",
+            "Chevy": "7",
+            "Westside Volkswagen": "8",
+            "Land Rover/Genesis": "9",
+            "Infiniti": "10"
+        };
+
+        let currentDriverZone = null;
+        let currentSelectedStore = null;
+        let dealerScopeMode = 'store'; // 'store' or 'global'
+        let currentEntryType = 'delivery'; // 'delivery' or 'pickup'
+        let activeDeleteId = null;
+        let activeCancelId = null;
+        let activeArchiveId = null;
+
+        function applyTimeBasedColumnVisibility() {
+            const amColumn = document.getElementById('column-am');
+            const pmColumn = document.getElementById('column-pm');
+            const nowHour = new Date().getHours();
+
+            if (nowHour < 12) {
+                if (amColumn) amColumn.classList.remove('hidden');
+                if (pmColumn) pmColumn.classList.add('hidden');
+            } else {
+                if (amColumn) amColumn.classList.add('hidden');
+                if (pmColumn) pmColumn.classList.remove('hidden');
+            }
+        }
+
+        applyTimeBasedColumnVisibility();
+
+        // Dealer Scope Toggle Setup
+        const scopeBtnStore = document.getElementById('scope-btn-store');
+        const scopeBtnGlobal = document.getElementById('scope-btn-global');
+        const dealerStoreBadge = document.getElementById('dealer-store-badge');
+
+        scopeBtnStore.onclick = () => {
+            dealerScopeMode = 'store';
+            scopeBtnStore.className = 'scope-toggle-btn active';
+            scopeBtnGlobal.className = 'scope-toggle-btn';
+            triggerSnapshotReload();
+        };
+
+        scopeBtnGlobal.onclick = () => {
+            dealerScopeMode = 'global';
+            scopeBtnGlobal.className = 'scope-toggle-btn active';
+            scopeBtnStore.className = 'scope-toggle-btn';
+            triggerSnapshotReload();
+        };
+
+        // Entry Type Toggle Setup
+        const typeBtnDelivery = document.getElementById('type-btn-delivery');
+        const typeBtnPickup = document.getElementById('type-btn-pickup');
+        const formHeadingTitle = document.getElementById('form-heading-title');
+        const submitFormBtn = document.getElementById('submit-form-btn');
+        const invoiceGroup = document.getElementById('invoice-group');
+        const invoiceInput = document.getElementById('invoice-num');
+
+        typeBtnDelivery.onclick = () => {
+            currentEntryType = 'delivery';
+            typeBtnDelivery.className = 'type-toggle-btn active-delivery';
+            typeBtnPickup.className = 'type-toggle-btn';
+            formHeadingTitle.textContent = 'Add New Item';
+            submitFormBtn.textContent = 'Add Item';
+            invoiceGroup.classList.remove('hidden');
+            invoiceInput.setAttribute('required', 'true');
+        };
+
+        typeBtnPickup.onclick = () => {
+            currentEntryType = 'pickup';
+            typeBtnPickup.className = 'type-toggle-btn active-pickup';
+            typeBtnDelivery.className = 'type-toggle-btn';
+            formHeadingTitle.textContent = 'Add New Item';
+            submitFormBtn.textContent = 'Add Item';
+            invoiceGroup.classList.add('hidden');
+            invoiceInput.removeAttribute('required');
+            invoiceInput.value = '';
+        };
+
+        function setupModal(openBtnId, modalId, closeBtnId) {
+            const openBtn = document.getElementById(openBtnId);
+            const modal = document.getElementById(modalId);
+            const closeBtn = document.getElementById(closeBtnId);
+
+            if (openBtn) {
+                openBtn.onclick = () => modal.classList.add('active');
+            }
+            if (closeBtn) {
+                closeBtn.onclick = () => modal.classList.remove('active');
+            }
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.classList.remove('active');
+            };
+        }
+
+        function rebindModals() {
+            setupModal('open-driver-login-btn', 'driver-login-modal', 'close-driver-login-btn');
+            setupModal('open-dealer-login-btn', 'dealer-login-modal', 'close-dealer-login-btn');
+            setupModal('gate-driver-login-btn', 'driver-login-modal', 'close-driver-login-btn');
+            setupModal('gate-dealer-login-btn', 'dealer-login-modal', 'close-dealer-login-btn');
+            setupModal(null, 'delete-pin-modal', 'close-delete-pin-btn');
+        }
+
+        rebindModals();
+        document.getElementById('cancel-delete-pin-btn').onclick = () => {
+            document.getElementById('delete-pin-modal').classList.remove('active');
+            activeDeleteId = null;
+        };
+
+        // Cancel Modal Events
+        const cancelConfirmModal = document.getElementById('cancel-confirm-modal');
+        document.getElementById('cancel-modal-no').onclick = () => {
+            cancelConfirmModal.classList.remove('active');
+            activeCancelId = null;
+        };
+        document.getElementById('cancel-modal-yes').onclick = async () => {
+            if (activeCancelId) {
+                try {
+                    await updateDoc(doc(db, "deliveries", activeCancelId), {
+                        statusType: 'canceled',
+                        canceledEpoch: Date.now()
+                    });
+                    showSuccessPopup('Delivery canceled successfully.');
+                } catch (error) {
+                    console.error("Error canceling delivery: ", error);
+                    alert('Failed to cancel delivery.');
+                }
+            }
+            cancelConfirmModal.classList.remove('active');
+            activeCancelId = null;
+        };
+
+        // Archive Modal Events
+        const archiveConfirmModal = document.getElementById('archive-confirm-modal');
+        document.getElementById('archive-modal-no').onclick = () => {
+            archiveConfirmModal.classList.remove('active');
+            activeArchiveId = null;
+        };
+        document.getElementById('archive-modal-yes').onclick = async () => {
+            if (activeArchiveId) {
+                try {
+                    await updateDoc(doc(db, "deliveries", activeArchiveId), {
+                        forceArchive: true
+                    });
+                    showSuccessPopup('Item archived successfully.');
+                } catch (error) {
+                    console.error("Error archiving item: ", error);
+                    alert('Failed to archive item.');
+                }
+            }
+            archiveConfirmModal.classList.remove('active');
+            activeArchiveId = null;
+        };
+
+        const deletePinForm = document.getElementById('delete-pin-form');
+        deletePinForm.onsubmit = async function(e) {
+            e.preventDefault();
+            const pinInput = document.getElementById('delete-pin-input').value.trim();
+            if (pinInput === 'luther') {
+                if (activeDeleteId) {
+                    try {
+                        await deleteDoc(doc(db, "deliveries", activeDeleteId));
+                        showSuccessPopup('Archived file deleted successfully.');
+                    } catch (error) {
+                        console.error("Error deleting document: ", error);
+                        alert('Failed to delete document from database.');
+                    }
+                }
+                deletePinForm.reset();
+                document.getElementById('delete-pin-modal').classList.remove('active');
+                activeDeleteId = null;
+            } else {
+                alert('Incorrect PIN!');
+            }
+        };
+
+        function showSuccessPopup(message) {
+            const popup = document.getElementById('success-popup');
+            const popupText = document.getElementById('success-popup-text');
+            popupText.textContent = message;
+            
+            popup.classList.add('active');
+            setTimeout(() => {
+                popup.classList.remove('active');
+            }, 2000);
+        }
+
+        function grantDashboardAccess() {
+            document.getElementById('auth-gate-screen').style.display = 'none';
+            document.getElementById('main-dashboard-app').classList.remove('app-locked');
+            triggerSnapshotReload();
+        }
+
+        const driverLoginForm = document.getElementById('driver-login-form');
+        driverLoginForm.onsubmit = function(e) {
+            e.preventDefault();
+            const username = document.getElementById('driver-user').value.trim().toLowerCase();
+            const password = document.getElementById('driver-pass').value.trim().toLowerCase();
+            const zoneAssigned = document.getElementById('driver-assigned-zone').value.trim();
+
+            if (username === 'partsdriver' && dealerZoneMapping.hasOwnProperty(Object.keys(dealerZoneMapping).find(k => k.toLowerCase() === password))) {
+                currentDriverZone = zoneAssigned;
+                driverLoginForm.reset();
+                document.getElementById('driver-login-modal').classList.remove('active');
+                
+                document.body.classList.remove('dealer-logged-in');
+                document.body.classList.add('driver-logged-in');
+
+                document.getElementById('header-auth-action-area').innerHTML = `
+                    <div class="user-status-badge">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Driver (Zone ${currentDriverZone})
+                    </div>
+                    <button id="global-logout-btn" class="btn-logout">Log Out</button>
+                `;
+                document.getElementById('global-logout-btn').onclick = () => handleUnifiedLogout(true);
+                
+                rebindModals();
+                grantDashboardAccess();
+                showSuccessPopup(`Driver login verified (Zone ${currentDriverZone}).`);
+            } else {
+                alert('Invalid driver credentials.');
+            }
+        };
+
+        const dealerLoginForm = document.getElementById('dealer-login-form');
+        dealerLoginForm.onsubmit = function(e) {
+            e.preventDefault();
+            const selectedStore = document.getElementById('dealer-select').value;
+            const password = document.getElementById('dealer-pass').value.trim();
+
+            if (selectedStore && password === 'parts') {
+                currentSelectedStore = selectedStore;
+                dealerScopeMode = 'store';
+                scopeBtnStore.className = 'scope-toggle-btn active';
+                scopeBtnGlobal.className = 'scope-toggle-btn';
+                const storeZone = dealerZoneMapping[currentSelectedStore] || 'N/A';
+                dealerStoreBadge.innerHTML = `${currentSelectedStore} <span class="zone-pill">${storeZone}</span>`;
+
+                const defaultZone = dealerZoneMapping[currentSelectedStore];
+                if (defaultZone) {
+                    document.getElementById('delivery-zone-select').value = defaultZone;
+                }
+
+                dealerLoginForm.reset();
+                document.getElementById('dealer-login-modal').classList.remove('active');
+                
+                document.body.classList.remove('driver-logged-in');
+                document.body.classList.add('dealer-logged-in');
+                
+                document.getElementById('add-delivery-section').classList.remove('hidden');
+
+                document.getElementById('header-auth-action-area').innerHTML = `
+                    <div class="user-status-badge">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Dealer: ${currentSelectedStore}
+                    </div>
+                    <button id="global-logout-btn" class="btn-logout">Log Out</button>
+                `;
+                document.getElementById('global-logout-btn').onclick = () => handleUnifiedLogout(true);
+                
+                rebindModals();
+                grantDashboardAccess();
+                showSuccessPopup(`Logged in to ${currentSelectedStore} store.`);
+            } else {
+                alert('Please select a store and ensure valid credentials!');
+            }
+        };
+
+        function handleUnifiedLogout(showPopup = true) {
+            document.body.classList.remove('driver-logged-in');
+            document.body.classList.remove('dealer-logged-in');
+            document.getElementById('add-delivery-section').classList.add('hidden');
+
+            currentDriverZone = null;
+            currentSelectedStore = null;
+            dealerScopeMode = 'store';
+
+            document.getElementById('main-dashboard-app').classList.add('app-locked');
+            document.getElementById('auth-gate-screen').style.display = 'flex';
+
+            document.getElementById('header-auth-action-area').innerHTML = `
+                <button id="open-driver-login-btn" class="btn-driver-login">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    Driver Login
+                </button>
+                <button id="open-dealer-login-btn" class="btn-dealer-login">
+                    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0-2-.9-2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    Dealer Login
+                </button>
+            `;
+            
+            rebindModals();
+            if (showPopup) showSuccessPopup('Logged out successfully.');
+        }
+
+        let uploadedImageUrl = null;
+        const invoicePhotoInput = document.getElementById('invoice-photo');
+        const previewThumb = document.getElementById('preview-thumb');
+        const removeFileBtn = document.getElementById('remove-file-btn');
+
+        invoicePhotoInput.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadedImageUrl = event.target.result;
+                    previewThumb.src = uploadedImageUrl;
+                    previewThumb.classList.add('show');
+                    removeFileBtn.classList.add('show');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                clearFileSelection();
+            }
+        };
+
+        function clearFileSelection() {
+            invoicePhotoInput.value = '';
+            uploadedImageUrl = null;
+            previewThumb.src = '';
+            previewThumb.classList.remove('show');
+            removeFileBtn.classList.remove('show');
+        }
+
+        removeFileBtn.onclick = clearFileSelection;
+
+        const deliveryForm = document.getElementById('delivery-form');
+        deliveryForm.onsubmit = async function(e) {
+            e.preventDefault();
+
+            const entryType = currentEntryType;
+            const invoice = entryType === 'pickup' ? 'N/A' : document.getElementById('invoice-num').value.trim();
+            const customer = document.getElementById('customer-name').value.trim();
+            const zone = document.getElementById('delivery-zone-select').value;
+            
+            const store = currentSelectedStore || 'General';
+            const nowHour = new Date().getHours();
+            const status = nowHour < 12 ? 'am' : 'pm';
+
+            try {
+                await addDoc(collection(db, "deliveries"), {
+                    invoice,
+                    customer,
+                    zone,
+                    status,
+                    store,
+                    entryType,
+                    imageUrl: uploadedImageUrl || null,
+                    signatureUrl: null,
+                    completionTimestamp: null,
+                    completionEpoch: null,
+                    canceledEpoch: null,
+                    statusType: 'active', // 'active', 'late', or 'canceled'
+                    createdAt: Date.now()
+                });
+                deliveryForm.reset();
+                clearFileSelection();
+                typeBtnDelivery.click();
+                if (currentSelectedStore && dealerZoneMapping[currentSelectedStore]) {
+                    document.getElementById('delivery-zone-select').value = dealerZoneMapping[currentSelectedStore];
+                }
+                showSuccessPopup(`${entryType === 'pickup' ? 'Pickup' : 'Delivery'} added successfully (Zone ${zone}).`);
+            } catch (error) {
+                console.error("Error saving entry: ", error);
+                alert('Failed to save entry to cloud database.');
+            }
+        };
+
+        let unsubscribeSnapshot = null;
+
+        function triggerSnapshotReload() {
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+            unsubscribeSnapshot = onSnapshot(collection(db, "deliveries"), (snapshot) => {
+                document.getElementById('list-am').innerHTML = '';
+                document.getElementById('list-pm').innerHTML = '';
+                document.getElementById('list-completed').innerHTML = '';
+                document.getElementById('list-archive').innerHTML = '';
+                document.getElementById('list-late').innerHTML = '';
+                document.getElementById('list-canceled').innerHTML = '';
+
+                let hasLateItems = false;
+                let hasCanceledItems = false;
+                const isDriverLoggedIn = document.body.classList.contains('driver-logged-in');
+                const isDealerLoggedIn = document.body.classList.contains('dealer-logged-in');
+                const nowEpoch = Date.now();
+                const twelveHoursMs = 12 * 60 * 60 * 1000;
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+
+                    let isArchived = false;
+                    const isForcedArchive = data.statusType === 'canceled' && data.forceArchive === true;
+                    if (isForcedArchive || 
+                        (data.completionEpoch && (nowEpoch - data.completionEpoch >= twelveHoursMs)) ||
+                        (data.canceledEpoch && (nowEpoch - data.canceledEpoch >= twelveHoursMs))) {
+                        isArchived = true;
+                    }
+
+                    if (!isArchived) {
+                        if (isDriverLoggedIn && currentDriverZone) {
+                            if (String(data.zone) !== String(currentDriverZone)) {
+                                return; 
+                            }
+                        } else if (isDealerLoggedIn && currentSelectedStore) {
+                            if (dealerScopeMode === 'store' && data.store !== currentSelectedStore) {
+                                return;
+                            }
+                        }
+                    }
+
+                    renderDeliveryCard(id, data, isArchived);
+                    
+                    const currentHour = new Date().getHours();
+                    const isAmLate = (currentHour >= 12) && (data.status === 'am') && !data.completionTimestamp && !isArchived && data.statusType !== 'canceled';
+                    const isPmLate = (currentHour >= 15) && (data.status === 'pm') && !data.completionTimestamp && !isArchived && data.statusType !== 'canceled';
+
+                    if ((data.statusType === 'late' || isAmLate || isPmLate) && !isArchived) hasLateItems = true;
+                    if (data.statusType === 'canceled' && !isArchived && !isForcedArchive) hasCanceledItems = true;
+                });
+
+                const containerLate = document.getElementById('late-deliveries-container');
+                if (hasLateItems) {
+                    containerLate.classList.remove('hidden');
+                } else {
+                    containerLate.classList.add('hidden');
+                }
+
+                const containerCanceled = document.getElementById('canceled-deliveries-container');
+                if (hasCanceledItems) {
+                    containerCanceled.classList.remove('hidden');
+                } else {
+                    containerCanceled.classList.add('hidden');
+                }
+
+                updateAllBadges();
+                filterArchiveCards();
+            });
+        }
+
+        // Archive Search Filter Logic
+        const archiveSearchInput = document.getElementById('archive-search-input');
+        if (archiveSearchInput) {
+            archiveSearchInput.oninput = filterArchiveCards;
+        }
+
+        function filterArchiveCards() {
+            const query = archiveSearchInput.value.trim().toLowerCase();
+            const archiveList = document.getElementById('list-archive');
+            if (!archiveList) return;
+
+            const cards = archiveList.getElementsByClassName('delivery-card');
+            for (let card of cards) {
+                const invoiceText = card.getAttribute('data-invoice') || '';
+                const dateText = card.getAttribute('data-date') || '';
+                const customerText = card.getAttribute('data-customer') || '';
+
+                if (invoiceText.includes(query) || dateText.includes(query) || customerText.includes(query)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+        }
+
+        function renderDeliveryCard(id, data, isArchived) {
+            const card = document.createElement('div');
+            const isPickup = data.entryType === 'pickup';
+            
+            const now = new Date();
+            const currentHour = now.getHours();
+            
+            const isAmLate = (currentHour >= 12) && (data.status === 'am') && !data.completionTimestamp && !isArchived && data.statusType !== 'canceled';
+            const isPmLate = (currentHour >= 15) && (data.status === 'pm') && !data.completionTimestamp && !isArchived && data.statusType !== 'canceled';
+            const isRunningLate = data.statusType === 'late' || isAmLate || isPmLate;
+            const isCanceled = data.statusType === 'canceled';
+
+            if (isArchived) {
+                card.className = 'delivery-card is-archived';
+            } else if (isCanceled) {
+                card.className = 'delivery-card is-canceled';
+            } else if (isRunningLate) {
+                card.className = `delivery-card is-running-late`;
+            } else {
+                card.className = `delivery-card ${isPickup ? 'is-pickup' : 'is-delivery'}`;
+            }
+
+            const epochToUse = data.completionEpoch || data.canceledEpoch;
+            const dateStr = epochToUse ? new Date(epochToUse).toLocaleDateString().toLowerCase() : '';
+            const fullDateTimeStr = epochToUse ? new Date(epochToUse).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }).toLowerCase() : '';
+            
+            card.setAttribute('data-invoice', (data.invoice || '').toLowerCase());
+            card.setAttribute('data-date', `${dateStr} ${fullDateTimeStr}`);
+            card.setAttribute('data-customer', (data.customer || '').toLowerCase());
+            
+            const entryTypeText = isPickup ? 'Pickup' : 'Delivery';
+            let timeInfo = `<p>Type: <strong>${entryTypeText}</strong> | Window: ${data.status.toUpperCase()} Shift</p>`;
+            if (data.zone) {
+                timeInfo += `<p>Zone: ${data.zone}</p>`;
+            }
+            if (data.store) {
+                timeInfo += `<p>Dealership Store: <strong>${data.store}</strong></p>`;
+            }
+            
+            let actionButtonsHtml = '';
+            if (isArchived) {
+                actionButtonsHtml += `<button class="btn-danger-action delete-archive-btn" style="margin-top:0.3rem;">Delete File</button>`;
+            } else if (!data.completionTimestamp && !isCanceled) {
+                if (document.body.classList.contains('driver-logged-in') && ((currentHour >= 12 && data.status === 'am') || (currentHour >= 15 && data.status === 'pm')) && data.statusType !== 'late') {
+                    actionButtonsHtml += `<button class="btn-warning mark-late-btn" style="margin-top:0.3rem;">Mark Late</button>`;
+                }
+                if (document.body.classList.contains('dealer-logged-in')) {
+                    actionButtonsHtml += `<button class="btn-warning cancel-delivery-btn" style="margin-top:0.3rem;">Cancel Delivery</button>`;
+                }
+            } else if (isCanceled && document.body.classList.contains('dealer-logged-in')) {
+                actionButtonsHtml += `<button class="btn-archive-action archive-now-btn" style="margin-top:0.3rem;">Archive Now</button>`;
+            }
+
+            let imageHtml = data.imageUrl ? `
+                <div style="margin-top:0.4rem;">
+                    <p style="font-size:calc(var(--font-size-base)*0.9); color:var(--text-muted);">Attachment / Document:</p>
+                    <img src="${data.imageUrl}" class="card-invoice-thumb" alt="Attachment">
+                </div>
+            ` : '';
+
+            let signatureHtml = data.signatureUrl ? `<p style="margin-top:0.4rem; font-size:calc(var(--font-size-base)*0.9); color:var(--text-muted);">Receiver Signature:</p><img src="${data.signatureUrl}" class="card-signature-thumb" alt="Receiver Signature">` : '';
+            
+            let timestampHtml = '';
+            if (isArchived) {
+                const fullDateStr = epochToUse ? new Date(epochToUse).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
+                const archiveLabel = data.canceledEpoch && !data.completionEpoch ? 'Canceled / Archived' : 'Archived / Completed';
+                timestampHtml = `<p class="archive-timestamp-badge">${archiveLabel}: ${fullDateStr}</p>`;
+            } else if (data.completionTimestamp) {
+                timestampHtml = `<p class="timestamp-badge">Completed at: ${data.completionTimestamp}</p>`;
+            } else if (data.canceledEpoch) {
+                const cancelTimeStr = new Date(data.canceledEpoch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                timestampHtml = `<p class="archive-timestamp-badge" style="color: #fde047;">Canceled at: ${cancelTimeStr}</p>`;
+            }
+
+            let statusPill = '';
+            if (isCanceled && !isArchived) {
+                statusPill = `
+                    <span class="canceled-badge-inline">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                        canceled
+                    </span>
+                `;
+            } else if (isRunningLate && !isArchived && !data.completionTimestamp) {
+                statusPill = `
+                    <span class="running-late-badge-inline">
+                        <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                        late
+                    </span>
+                `;
+            }
+
+            const typePillClass = isArchived ? 'archive' : (isPickup ? 'pickup' : 'delivery');
+            const invoiceDisplay = isPickup ? '' : `<span class="invoice-tag">#${data.invoice}</span>`;
+
+            card.innerHTML = `
+                <div class="delivery-summary-row">
+                    <div class="delivery-summary-info">
+                        <h3>${data.customer}</h3>
+                        <span class="type-badge-pill ${typePillClass}">${isArchived ? 'Archived' : entryTypeText}</span>
+                        ${invoiceDisplay}
+                        ${statusPill}
+                    </div>
+                </div>
+                <div class="delivery-details">
+                    ${timeInfo}
+                    ${timestampHtml}
+                    ${imageHtml}
+                    ${signatureHtml}
+                    <div class="card-actions-row">
+                        ${!data.completionTimestamp && !isArchived && !isCanceled && document.body.classList.contains('driver-logged-in') ? `<button class="btn-success-action mark-completed-btn">Mark Completed</button>` : ''}
+                        ${actionButtonsHtml}
+                    </div>
+                </div>
+            `;
+
+            card.querySelector('.delivery-summary-row').onclick = () => {
+                card.classList.toggle('expanded');
+            };
+
+            const deleteArchiveBtn = card.querySelector('.delete-archive-btn');
+            if (deleteArchiveBtn) {
+                deleteArchiveBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    activeDeleteId = id;
+                    document.getElementById('delete-pin-input').value = '';
+                    document.getElementById('delete-pin-modal').classList.add('active');
+                };
+            }
+
+            const lateBtn = card.querySelector('.mark-late-btn');
+            if (lateBtn) {
+                lateBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    await updateDoc(doc(db, "deliveries", id), { statusType: 'late' });
+                };
+            }
+
+            const cancelBtn = card.querySelector('.cancel-delivery-btn');
+            if (cancelBtn) {
+                cancelBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    activeCancelId = id;
+                    cancelConfirmModal.classList.add('active');
+                };
+            }
+
+            const archiveNowBtn = card.querySelector('.archive-now-btn');
+            if (archiveNowBtn) {
+                archiveNowBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    activeArchiveId = id;
+                    archiveConfirmModal.classList.add('active');
+                };
+            }
+
+            const completeBtn = card.querySelector('.mark-completed-btn');
+            if (completeBtn) {
+                completeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    
+                    if (document.body.classList.contains('driver-logged-in') && currentDriverZone) {
+                        if (String(data.zone) !== String(currentDriverZone)) {
+                            alert(`Access Denied: This item belongs to Zone ${data.zone}, but you are assigned to Zone ${currentDriverZone}.`);
+                            return;
+                        }
+                    }
+
+                    openCompletionPhotoPrompt(id, data);
+                };
+            }
+
+            let targetListId = `list-${data.status}`;
+            if (isArchived) {
+                targetListId = 'list-archive';
+            } else if (data.completionTimestamp) {
+                targetListId = 'list-completed';
+            } else if (isCanceled) {
+                targetListId = 'list-canceled';
+            } else if (isRunningLate) {
+                targetListId = 'list-late';
+            }
+
+            const targetList = document.getElementById(targetListId);
+            if (targetList) targetList.appendChild(card);
+        }
+
+        const photoModal = document.getElementById('photo-prompt-modal');
+        const yesBtn = document.getElementById('photo-prompt-yes');
+        const noBtn = document.getElementById('photo-prompt-no');
+        const completionPhotoInput = document.getElementById('completion-photo-input');
+
+        const signatureModal = document.getElementById('signature-modal');
+        const closeSigBtn = document.getElementById('close-signature-btn');
+        const cancelSigBtn = document.getElementById('cancel-signature-btn');
+        const clearSigBtn = document.getElementById('clear-signature-btn');
+        const saveSigBtn = document.getElementById('save-signature-btn');
+        const signatureCanvas = document.getElementById('signature-canvas');
+        const ctx = signatureCanvas.getContext('2d');
+
+        let activeCompletionId = null;
+        let activeCompletionData = null;
+        let isDrawing = false;
+        let hasDrawn = false;
+
+        function initSignatureCanvas() {
+            const rect = signatureCanvas.parentElement.getBoundingClientRect();
+            signatureCanvas.width = rect.width || 350;
+            signatureCanvas.height = 160;
+            ctx.strokeStyle = '#f8fafc';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+            hasDrawn = false;
+        }
+
+        function getCanvasPosition(e) {
+            const rect = signatureCanvas.getBoundingClientRect();
+            if (e.touches && e.touches[0]) {
+                return {
+                    x: e.touches[0].clientX - rect.left,
+                    y: e.touches[0].clientY - rect.top
+                };
+            }
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        signatureCanvas.onmousedown = startDrawing;
+        signatureCanvas.onmousemove = draw;
+        signatureCanvas.onmouseup = stopDrawing;
+        signatureCanvas.onmouseleave = stopDrawing;
+        signatureCanvas.ontouchstart = (e) => { e.preventDefault(); startDrawing(e); };
+        signatureCanvas.ontouchmove = (e) => { e.preventDefault(); draw(e); };
+        signatureCanvas.ontouchend = (e) => { e.preventDefault(); stopDrawing(); };
+
+        function startDrawing(e) {
+            isDrawing = true;
+            hasDrawn = true;
+            const pos = getCanvasPosition(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getCanvasPosition(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+
+        function stopDrawing() { isDrawing = false; }
+        clearSigBtn.onclick = initSignatureCanvas;
+
+        function openCompletionPhotoPrompt(id, data) {
+            activeCompletionId = id;
+            activeCompletionData = data;
+            photoModal.classList.add('active');
+        }
+
+        noBtn.onclick = () => {
+            if (!activeCompletionId) return;
+            photoModal.classList.remove('active');
+            openSignatureModal();
+        };
+
+        yesBtn.onclick = () => {
+            photoModal.classList.remove('active');
+            completionPhotoInput.value = ''; 
+            completionPhotoInput.click();
+        };
+
+        completionPhotoInput.onchange = function(e) {
+            if (!activeCompletionId) return;
+            const file = e.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    activeCompletionData.imageUrl = event.target.result;
+                    openSignatureModal();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                openSignatureModal();
+            }
+        };
+
+        function openSignatureModal() {
+            signatureModal.classList.add('active');
+            setTimeout(initSignatureCanvas, 50);
+        }
+
+        closeSigBtn.onclick = () => { signatureModal.classList.remove('active'); activeCompletionId = null; };
+        cancelSigBtn.onclick = () => { signatureModal.classList.remove('active'); activeCompletionId = null; };
+
+        saveSigBtn.onclick = async () => {
+            if (!activeCompletionId) return;
+            
+            let signatureDataUrl = null;
+            if (hasDrawn) {
+                signatureDataUrl = signatureCanvas.toDataURL('image/png');
+            }
+
+            signatureModal.classList.remove('active');
+
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const epochTime = now.getTime();
+
+            try {
+                await updateDoc(doc(db, "deliveries", activeCompletionId), {
+                    completionTimestamp: timeString,
+                    completionEpoch: epochTime,
+                    imageUrl: activeCompletionData.imageUrl || null,
+                    signatureUrl: signatureDataUrl,
+                    statusType: 'active'
+                });
+                showSuccessPopup('Item marked as completed successfully.');
+            } catch (error) {
+                console.error("Error completing item: ", error);
+                alert('Failed to update status.');
+            }
+
+            activeCompletionId = null;
+            activeCompletionData = null;
+        };
+
+        function updateAllBadges() {
+            ['am', 'pm', 'completed', 'archive', 'late', 'canceled'].forEach(status => {
+                const list = document.getElementById(`list-${status}`);
+                const badge = document.getElementById(`badge-${status}`);
+                if (list && badge) {
+                    badge.textContent = list.children.length;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

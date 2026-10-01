@@ -1,4 +1,3 @@
-packages: []
 minimumReleaseAgeExclude:
   - '@next/*'
   - next
